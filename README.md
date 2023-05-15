@@ -2,7 +2,7 @@ This is the Laravel application that I use to call weather forecasting api. Feel
 
 **To run this project from this repository:**
 
-open gitbase and clone this project with given command below
+open gitbash and clone this project with given command below
 
 ```
 git clone https://github.com/uzairlive/weather-api.git
