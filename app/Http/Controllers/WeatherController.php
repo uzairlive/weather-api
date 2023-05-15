@@ -7,7 +7,6 @@ use App\Models\API;
 
 class WeatherController extends Controller
 {
-    
     public function index()
     {
         return view('welcome');
