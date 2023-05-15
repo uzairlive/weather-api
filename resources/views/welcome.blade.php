@@ -14,8 +14,7 @@
     <style>
         body {
             font-family: 'Poppins';
-            background: #1a202c;
-            color: white !important;
+            color: black !important;
         }
 
         .header {
@@ -30,10 +29,6 @@
             height: 100%;
             top: 0;
             right: 0;
-        }
-
-        input {
-            color: white !important;
         }
 
         .loader {
@@ -62,7 +57,7 @@
             display: flex;
             justify-content: space-around;
             gap: 5px;
-            margin-top: 45px;
+            margin-top: 35px;
             flex-wrap: wrap;
         }
 
@@ -71,6 +66,30 @@
             color: #333 !important;
             flex: 0 0 18%;
         }
+
+        .result-autocomplete {
+            position: absolute;
+            z-index: 1;
+            background: white;
+            color: black;
+            width: 100%;
+        }
+
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .video-background video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
 
         @media (max-width:991px) {
             .forecast-data .card {
@@ -90,6 +109,12 @@
     <div class="loader">
         <img src="/images/rain.gif" alt="Loader">
     </div>
+    <div class="video-background">
+        <video autoplay loop muted>
+            <source src="/videos/bg-conver.mp4" type="video/mp4">
+            <!-- Add additional video sources for cross-browser compatibility (e.g., WebM, Ogg) -->
+        </video>
+    </div>
     <div class="container">
         <header class="header">
             <h2>The Weather Forecast</h2>
@@ -99,21 +124,21 @@
                 <div class="position-relative">
                     <form id="location-forecast">
                         @csrf
-                        <input type="text" placeholder="Enter Location" id="location-search"
-                            class="form-control bg-transparent">
+                        <input type="text" placeholder="Enter Location" id="location-search" class="form-control">
                         <button type="submit" class="btn-search" id="search"><img src="/images/weather-forecast.png"
                                 alt="Location"></button>
+                        <div class="result-autocomplete"></div>
                     </form>
                 </div>
             </div>
         </div>
+        <div class="text-center" id="resolveAddress"></div>
         <div class="forecast-data" id="forecast-data">
 
         </div>
     </div>
-
-
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
     <script>
         $(document).ready(function() {
             $('#location-search').focus();
@@ -121,16 +146,61 @@
         $(document).on('keypress', '#location-search', function(event) {
             if (event.keyCode === 13) {
                 event.preventDefault(); // Prevent form submission or page reload
-                $('.loader').show();
-                setTimeout(() => {
-                    handleEnterPress();
-                }, 500);
+                // $('.loader').show();
+                // setTimeout(() => {
+                //     handleSearch();
+                // }, 500);
             }
         });
 
-        function handleEnterPress() {
+        $(document).on('keyup', '#location-search', function(event) {
+            event.preventDefault();
+            autoComplete($(this).val());
+
+        });
+
+        $(document).on('click', '.searchLocation', function(event) {
+            event.preventDefault();
+            $('.loader').show();
+            $('.result-autocomplete').hide();
+
+            setTimeout(() => {
+                handleSearch($(this).attr('data-id'));
+            }, 500);
+
+        });
+
+        function autoComplete(val) {
+            fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + val + '&count=10&language=en&format=json')
+                .then(response => {
+
+                    return response.json();
+                })
+                .then(data => {
+                    // Process the response data
+                    console.log(data);
+                    var html = '';
+                    if (data.results.length > 0) {
+                        data.results.forEach(el => {
+                            html +=
+                                `<li class="searchLocation my-2" style="cursor:pointer;" data-id="${el.name}">${el.name}, ${el.admin1} (${el.timezone})</li>`
+                        });
+                        $('.result-autocomplete').html(`<ul style="list-style: none;padding-left: 11px;">${html}</ul>`)
+                            .show();
+                    } else {
+                        $('.result-autocomplete').html('').hide();
+                    }
+                })
+                .catch(error => {
+                    // Handle any errors
+                    console.error('Error:', error);
+                });
+
+        }
+
+        function handleSearch(value) {
             var form_data = new FormData($('#location-forecast')[0]);
-            form_data.append('location', $('#location-search').val());
+            form_data.append('location', value);
 
             $.ajaxSetup({
                 headers: {
@@ -151,7 +221,7 @@
                     if (res.code == '404') {
                         $('#forecast-data').html(
                             '<p>Unfortunately no data found from provided location. Please try another one.</p>'
-                        );
+                            );
                     } else {
 
                         if (res.response != null) {
@@ -164,8 +234,8 @@
                                 const dayString = date.toLocaleString('en-US', options);
 
                                 html += `<div class="card text-center border-dark">
-                                    <div class="card-header border-dark py-3">
-                                        <div class="card-title mb-0">${dayString}/${res.days[index]?.datetime}</div>
+                                    <div class="card-header border-dark py-3 px-1">
+                                        <div class="card-title mb-0"><p class="mb-0">${dayString}<br>${res.days[index]?.datetime}<br>(${res?.timezone})</p></div>
                                     </div>
                                     <div class="card-body">
                                         <img src="/images/${res.days[index]?.icon}.svg" alt="" height="100" width="100">
@@ -180,6 +250,7 @@
                             }
 
                             $('#forecast-data').html(html);
+                            $('#resolveAddress').html(`<h3>${res?.resolvedAddress}</h3>`)
                         }
                     }
                 },
