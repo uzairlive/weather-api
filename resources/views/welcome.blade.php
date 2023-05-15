@@ -26,9 +26,12 @@
             position: absolute;
             background: transparent;
             border-style: none;
-            height: 100%;
+            height: 30px;
             top: 0;
-            right: 0;
+            right: 1rem;
+            bottom: 0;
+            margin: auto;
+
         }
 
         .loader {
@@ -62,7 +65,7 @@
         }
 
         .forecast-data .card {
-            background: #f8f9faeb !important;
+            background: #f8f9faa8 !important;
             color: #333 !important;
             flex: 0 0 18%;
         }
@@ -82,6 +85,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
+            opacity: 0.8;
         }
 
         .video-background video {
@@ -90,8 +94,32 @@
             object-fit: cover;
         }
 
+        .form-control {
+            padding: 1rem !important;
+            background: transparent !important;
+            border: 2px solid black !important;
+            color: black !important;
+            font-size: 20px;
+        }
+
+        .card-title p {
+            font-size: 14px;
+        }
+
+        .card-desc p {
+            font-size: 16px;
+        }
+
+        input::placeholder {
+            /* Chrome, Firefox, Opera, Safari 10.1+ */
+            color: black !important;
+        }
 
         @media (max-width:991px) {
+            .forecast-data {
+                gap: 1px !important;
+            }
+
             .forecast-data .card {
                 flex: 0 0 25%;
             }
@@ -119,27 +147,28 @@
         <header class="header">
             <h2>The Weather Forecast</h2>
         </header>
-        <div class="row py-5 justify-content-center align-items-center">
+        <div class="row pt-5 pb-3 justify-content-center align-items-center">
             <div class="col-md-8">
                 <div class="position-relative">
                     <form id="location-forecast">
                         @csrf
                         <input type="text" placeholder="Enter Location" id="location-search" class="form-control">
-                        <button type="submit" class="btn-search" id="search"><img src="/images/weather-forecast.png"
-                                alt="Location"></button>
+                        {{-- <button type="submit" class="btn-search" id="search"></button> --}}
+                        <img src="/images/location.png" alt="Location" class="btn-search">
                         <div class="result-autocomplete"></div>
                     </form>
                 </div>
             </div>
         </div>
         <div class="text-center" id="resolveAddress"></div>
-        <div class="forecast-data" id="forecast-data">
+        <div class="forecast-data py-3" id="forecast-data">
 
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
     <script>
+        var city = '';
         $(document).ready(function() {
             $('#location-search').focus();
         });
@@ -163,9 +192,9 @@
             event.preventDefault();
             $('.loader').show();
             $('.result-autocomplete').hide();
-
+            city = $(this).attr('data-id');
             setTimeout(() => {
-                handleSearch($(this).attr('data-id'));
+                handleSearch($(this).attr('data-lat'), $(this).attr('data-long'));
             }, 500);
 
         });
@@ -182,8 +211,8 @@
                     var html = '';
                     if (data.results.length > 0) {
                         data.results.forEach(el => {
-                            html +=
-                                `<li class="searchLocation my-2" style="cursor:pointer;" data-id="${el.name}">${el.name}, ${el.admin1} (${el.timezone})</li>`
+                            html += `<li class="searchLocation my-2" style="cursor:pointer;" data-id="${el.name}" data-lat="${el.latitude}"
+                            data-long="${el.longitude}">${el.name}, ${el.admin1} (${el.timezone})</li>`
                         });
                         $('.result-autocomplete').html(`<ul style="list-style: none;padding-left: 11px;">${html}</ul>`)
                             .show();
@@ -198,9 +227,10 @@
 
         }
 
-        function handleSearch(value) {
+        function handleSearch(lat, long) {
             var form_data = new FormData($('#location-forecast')[0]);
-            form_data.append('location', value);
+            form_data.append('lat', lat);
+            form_data.append('long', long);
 
             $.ajaxSetup({
                 headers: {
@@ -221,7 +251,7 @@
                     if (res.code == '404') {
                         $('#forecast-data').html(
                             '<p>Unfortunately no data found from provided location. Please try another one.</p>'
-                            );
+                        );
                     } else {
 
                         if (res.response != null) {
@@ -250,7 +280,7 @@
                             }
 
                             $('#forecast-data').html(html);
-                            $('#resolveAddress').html(`<h3>${res?.resolvedAddress}</h3>`)
+                            $('#resolveAddress').html(`<h3 class="mb-0">${city}</h3>`)
                         }
                     }
                 },

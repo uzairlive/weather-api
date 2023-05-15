@@ -15,7 +15,8 @@ class WeatherController extends Controller
     public function getForecast(Request $request)
     {
         $payload = [
-            'location' => $request->location,
+            'lat' => $request->lat,
+            'long' => $request->long,
         ];
         $response = API::call('GET', $payload);
         if ($response == null) {

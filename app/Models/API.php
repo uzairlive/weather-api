@@ -8,7 +8,7 @@ class API extends Model
 {
     public static function call($method, $payload)
     {
-        $data_string = $payload['location'] . '?unitGroup=metric&include=days&key=' . config('app.api_key') . '&contentType=json';
+        $data_string = $payload['lat'] . ',' . $payload['long'] . '?key=' . config('app.api_key');
         $url = config('app.api_url') . $data_string;
 
         $headers = array(
