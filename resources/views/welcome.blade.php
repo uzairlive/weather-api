@@ -211,8 +211,9 @@
                     var html = '';
                     if (data.results.length > 0) {
                         data.results.forEach(el => {
-                            html += `<li class="searchLocation my-2" style="cursor:pointer;" data-id="${el.name}" data-lat="${el.latitude}"
-                            data-long="${el.longitude}">${el.name}, ${el.admin1} (${el.timezone})</li>`
+                            html +=
+                                `<li class="searchLocation my-2" style="cursor:pointer;" data-id="${el.name}" data-lat="${el.latitude}"
+                            data-long="${el.longitude}">${el.admin1}, ${el.country}, ${el.country_code} (${el.timezone})</li>`
                         });
                         $('.result-autocomplete').html(`<ul style="list-style: none;padding-left: 11px;">${html}</ul>`)
                             .show();
